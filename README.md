@@ -59,6 +59,20 @@ Initialize a Repository
 git.sh init
 ```
 
+Read a git repo object
+
+```sh
+git.sh cat-file -p <blob_sha>
+```
+
+Create a get blob object
+
+```sh
+git.sh hash-object -w <filename>
+```
+
+### Future commands (not yet implimented)
+
 Add Files
 
 ```sh
