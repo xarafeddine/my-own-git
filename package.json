@@ -3,7 +3,7 @@
   "description": "Build your own Git challenge, from CodeCrafters",
   "type": "module",
   "scripts": {
-    "dev": "bun run ../app/main.ts",
+    "git": "bun run ../app/main.ts",
     "test": "git add . && git commit --allow-empty -m \"pass stage\" && git push origin master"
   },
   "dependencies": {
