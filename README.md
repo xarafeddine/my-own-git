@@ -44,11 +44,27 @@ Before you begin, ensure you have [Bun](https://bun.sh) and [Node.js](https://no
 
 ## Usage
 
-Note: To ensure that the .git file of the repo doesn't get overwritten, test the project in a separate folder, for example:
+The `mygit.sh` script is expected to operate on the `.git` folder inside the
+current working directory. If you're running this inside the root of this
+repository, you might end up accidentally damaging your repository's `.git`
+folder.
+
+We suggest executing `git.sh` in a different folder when testing locally.
+For example:
 
 ```sh
-$ mkdir test_dir && cd test_dir
-$ /path/to/git.sh init # initialize a new git repository
+mkdir -p /tmp/testing && cd /tmp/testing
+/path/to/your/repo/mygit.sh init
+```
+
+To make this easier to type out, you could add a
+[shell alias](https://shapeshed.com/unix-alias/):
+
+```sh
+alias mygit=/path/to/your/repo/mygit.sh
+
+mkdir -p /tmp/testing && cd /tmp/testing
+mygit init
 ```
 
 After installing the dependencies, you can use the custom Git system by running the following commands:
@@ -56,19 +72,19 @@ After installing the dependencies, you can use the custom Git system by running 
 Initialize a Repository
 
 ```sh
-git.sh init
+mygit init
 ```
 
 Read a git repo object
 
 ```sh
-git.sh cat-file -p <blob_sha>
+mygit cat-file -p <blob_sha>
 ```
 
 Create a get blob object
 
 ```sh
-git.sh hash-object -w <filename>
+mygit hash-object -w <filename>
 ```
 
 ### Future commands (not yet implimented)
@@ -76,35 +92,35 @@ git.sh hash-object -w <filename>
 Add Files
 
 ```sh
-git.sh add <file-path>
+mygit add <file-path>
 ```
 
 Commit Changes
 
 ```sh
-git.sh commit -m "Commit message"
+mygit commit -m "Commit message"
 ```
 
 View Commit History
 
 ```sh
-git.sh log
+mygit log
 ```
 
 Create a Branch
 
 ```sh
-git.sh branch <branch-name>
+mygit branch <branch-name>
 ```
 
 Merge Branches
 
 ```sh
-git.sh merge <branch-name>
+mygit merge <branch-name>
 ```
 
 Check Status
 
 ```sh
-git.sh status
+mygit status
 ```
