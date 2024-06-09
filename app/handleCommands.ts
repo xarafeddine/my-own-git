@@ -33,7 +33,7 @@ export function handleCommands(args: string[]) {
       const [ops, fileName] = params;
       if (ops == "-w") {
         const fileContent = fs.readFileSync(fileName);
-        console.log(fileContent.toString());
+
         const blobFile = Buffer.from(
           `blob ${fileContent.length}\0${fileContent}`
         );
