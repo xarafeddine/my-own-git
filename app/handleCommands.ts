@@ -1,20 +1,24 @@
 import fs from "fs";
 import zlib from "zlib";
-import crypto from "crypto";
 import { Commands, isSha1 } from "./types";
+import { computeSHA1Hash, getObjectData, getObjectPath } from "./utils";
 
 export function handleCommands(args: string[]) {
   const [command, ...params] = args;
   switch (command) {
-    case Commands.Init:
+    case Commands.INIT:
       handleInit();
       break;
-    case Commands.CatFile:
+    case Commands.CAT_FILE:
       handleCatFile(params);
       break;
 
-    case Commands.hashObject:
+    case Commands.HASH_OBJECT:
       handleHashObject(params);
+      break;
+
+    case Commands.LS_TREE:
+      handleLsTree(params);
       break;
 
     default:
@@ -33,17 +37,23 @@ function handleInit() {
 function handleCatFile(params: string[]) {
   const [flag, sha1] = params;
   if (flag != "-p" || !isSha1(sha1)) throw "error";
-  const blobFileDir = sha1.substring(0, 2);
-  const blobFileName = sha1.substring(2);
-  const blobFile = fs.readFileSync(
-    `.git/objects/${blobFileDir}/${blobFileName}`
-  );
-  const decompressedBuffer = zlib.unzipSync(blobFile);
-  const blobString = decompressedBuffer.toString();
-  const [_, blobContent] = blobString.split("\0");
+  const { objContent } = getObjectData(sha1);
 
-  process.stdout.write(blobContent);
+  process.stdout.write(objContent);
 }
+
+function handleLsTree(params: string[]) {
+  const [flag, sha1] = params;
+
+  if (!isSha1(sha1)) throw "error";
+
+  const { treeEntries } = getObjectData(sha1);
+  if (flag === "--name-only") {
+    treeEntries?.map((entry) => console.log(entry.name));
+  }
+  // process.stdout.write("");
+}
+
 function handleHashObject(params: string[]) {
   const [flag, fileName] = params;
   if (flag !== "-w") throw "error";
@@ -51,12 +61,9 @@ function handleHashObject(params: string[]) {
   const blobFile = Buffer.from(`blob ${fileContent.length}\0${fileContent}`);
 
   // Compute hash for blob
-  const shasum = crypto.createHash("sha1");
-  shasum.update(blobFile);
-  const hashedBlobFile = shasum.digest("hex");
+  const hashedBlobFile = computeSHA1Hash(blobFile, "hex");
 
-  const blobFileDir = hashedBlobFile.substring(0, 2);
-  const blobFileName = hashedBlobFile.substring(2);
+  const [blobFileDir, blobFileName] = getObjectPath(hashedBlobFile);
 
   const compressBlob = zlib.deflateSync(blobFile);
   fs.mkdirSync(`.git/objects/${blobFileDir}`);
