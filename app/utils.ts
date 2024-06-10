@@ -48,10 +48,10 @@ export function getObjectData(sha1: string) {
   const [objType, objSize] = header.split(" ");
 
   if (objType === "tree") {
-    const body = decompressedBuffer.subarray(
-      decompressedBuffer.indexOf("\0") + 1
-    );
-
+    // const body = decompressedBuffer.subarray(
+    //   decompressedBuffer.indexOf("\0") + 1
+    // );
+    const body = Buffer.from(objContent);
     const treeEntries: TreeEntry[] = [];
     let nullIndex = 0;
     for (let i = 0; i < body.length; i = nullIndex + 21) {
