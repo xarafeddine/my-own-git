@@ -1,3 +1,9 @@
+import crypto, { BinaryToTextEncoding } from "crypto";
+import fs from "fs";
+import zlib from "zlib";
+import { FileMode, TreeEntry } from "./types";
+import { buffer } from "stream/consumers";
+
 // const encoder = new TextEncoder();
 // const decoder = new TextDecoder();
 // export const strToBytes = encoder.encode.bind(encoder);
@@ -23,4 +29,52 @@ export function bytesToString(arr: Uint8Array): string {
   return Array.from(arr)
     .map((n) => String.fromCharCode(n))
     .join("");
+}
+
+export function getObjectPath(sha1: string) {
+  const objectDir = sha1.substring(0, 2);
+  const objectFile = sha1.substring(2);
+  return [objectDir, objectFile];
+}
+export function getObjectData(sha1: string) {
+  const [objDir, objFile] = getObjectPath(sha1);
+
+  const objBuffer = fs.readFileSync(`.git/objects/${objDir}/${objFile}`);
+  const decompressedBuffer = zlib.unzipSync(objBuffer);
+
+  const objString = decompressedBuffer.toString();
+
+  const [header, objContent] = objString.split("\0");
+  const [objType, objSize] = header.split(" ");
+
+  if (objType === "tree") {
+    const body = decompressedBuffer.subarray(
+      decompressedBuffer.indexOf("\0") + 1
+    );
+
+    const treeEntries: TreeEntry[] = [];
+    let nullIndex = 0;
+    for (let i = 0; i < body.length; i = nullIndex + 21) {
+      const spaceIndex = body.indexOf(" ", i);
+      nullIndex = body.indexOf("\0", spaceIndex);
+      const mode = body.subarray(i, spaceIndex).toString();
+      const name = body.subarray(spaceIndex + 1, nullIndex).toString();
+      const hash = body.subarray(nullIndex + 1, nullIndex + 21).toString("hex");
+      const type = mode === "40000" ? "tree" : "blob";
+      treeEntries.push({ mode, hash, name });
+    }
+    return { objType, objSize, objContent: treeEntries };
+  }
+
+  return { objType, objSize, objContent };
+}
+
+export function computeSHA1Hash(
+  input: string | Buffer,
+  option?: BinaryToTextEncoding
+) {
+  const shasum = crypto.createHash("sha1");
+  shasum.update(input);
+
+  return shasum.digest(option || "binary");
 }
