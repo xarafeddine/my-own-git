@@ -48,10 +48,10 @@ export function getObjectData(sha1: string) {
   const [objType, objSize] = header.split(" ");
 
   if (objType === "tree") {
-    // const body = decompressedBuffer.subarray(
-    //   decompressedBuffer.indexOf("\0") + 1
-    // );
-    const body = Buffer.from(objContent);
+    const body = decompressedBuffer.subarray(
+      decompressedBuffer.indexOf("\0") + 1
+    );
+
     const treeEntries: TreeEntry[] = [];
     let nullIndex = 0;
     for (let i = 0; i < body.length; i = nullIndex + 21) {
@@ -63,7 +63,7 @@ export function getObjectData(sha1: string) {
       const type = mode === "40000" ? "tree" : "blob";
       treeEntries.push({ mode, hash, name });
     }
-    return { objType, objSize, objContent, treeEntries };
+    return { objType, objSize, objContent: treeEntries };
   }
 
   return { objType, objSize, objContent };

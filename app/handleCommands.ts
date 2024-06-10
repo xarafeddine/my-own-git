@@ -1,6 +1,6 @@
 import fs from "fs";
 import zlib from "zlib";
-import { Commands, isSha1 } from "./types";
+import { Commands, ObjectType, TreeEntry, isSha1 } from "./types";
 import { computeSHA1Hash, getObjectData, getObjectPath } from "./utils";
 
 export function handleCommands(args: string[]) {
@@ -39,24 +39,37 @@ function handleCatFile(params: string[]) {
   if (flag != "-p" || !isSha1(sha1)) throw "error";
   const { objContent } = getObjectData(sha1);
 
-  process.stdout.write(objContent);
+  process.stdout.write(objContent as string);
 }
 
 function handleLsTree(params: string[]) {
-  const [flag, sha1] = params;
+  const [param] = params;
+  let sha1;
+  if (param === "--name-only") {
+    sha1 = params[1];
+  } else {
+    sha1 = param;
+  }
 
   if (!isSha1(sha1)) throw "error";
 
-  const { treeEntries } = getObjectData(sha1);
+  const { objContent } = getObjectData(sha1);
+  const treeEntries = objContent as TreeEntry[];
   if (!treeEntries) throw Error("");
-  if (params.includes("--name-only")) {
+
+  if (param === "--name-only") {
     for (const entry of treeEntries) {
       console.log(entry.name);
     }
     return;
   }
+
   for (const entry of treeEntries) {
-    console.log(`${entry.mode}  ${entry.hash} ${entry.name}`);
+    console.log(
+      `${entry.mode} ${ObjectType[parseInt(entry.mode)]}  ${entry.hash} ${
+        entry.name
+      }`
+    );
   }
 }
 

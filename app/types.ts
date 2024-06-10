@@ -11,6 +11,13 @@ export enum FileMode {
   Directory = "040000",
 }
 
+export const ObjectType: Record<number, string> = {
+  40000: "tree",
+  100644: "blob",
+  100755: "exec",
+  120000: "symb",
+};
+
 export function isSha1(str: string) {
   const sha1Regex = /^[a-fA-F0-9]{40}$/;
   return sha1Regex.test(str);
