@@ -48,10 +48,15 @@ function handleLsTree(params: string[]) {
   if (!isSha1(sha1)) throw "error";
 
   const { treeEntries } = getObjectData(sha1);
-  if (flag === "--name-only") {
-    const res = treeEntries?.map((entry) => entry.name).join("\n");
-
-    process.stdout.write(res + "\n");
+  if (!treeEntries) throw Error("");
+  if (params.includes("--name-only")) {
+    for (const entry of treeEntries) {
+      console.log(entry.name);
+    }
+    return;
+  }
+  for (const entry of treeEntries) {
+    console.log(`${entry.mode}  ${entry.hash} ${entry.name}`);
   }
 }
 
