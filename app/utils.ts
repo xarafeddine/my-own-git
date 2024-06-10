@@ -47,43 +47,22 @@ export function getObjectData(sha1: string) {
   const [header, objContent] = objString.split("\0");
   const [objType, objSize] = header.split(" ");
 
-  // if (objType === "tree") {
-  //   const body = decompressedBuffer.subarray(
-  //     decompressedBuffer.indexOf("\0") + 1
-  //   );
-
-  //   const treeEntries: TreeEntry[] = [];
-  //   let nullIndex = 0;
-  //   for (let i = 0; i < body.length; i = nullIndex + 21) {
-  //     const spaceIndex = body.indexOf(" ", i);
-  //     nullIndex = body.indexOf("\0", spaceIndex);
-  //     const mode = body.subarray(i, spaceIndex).toString();
-  //     const name = body.subarray(spaceIndex + 1, nullIndex).toString();
-  //     const hash = body.subarray(nullIndex + 1, nullIndex + 21).toString("hex");
-  //     const type = mode === "40000" ? "tree" : "blob";
-  //     treeEntries.push({ mode, hash, name });
-  //   }
-  //   return { objType, objSize, objContent, treeEntries };
-  // }
-
   if (objType === "tree") {
-    const arr = objContent.split("\0");
-    const [mode, name] = arr[0].split(" ");
-    const treeEntries: TreeEntry[] = [{ mode, name, hash: "" }];
-    for (let i = 0; i < arr.length - 1; i++) {
-      const hash = arr[i + 1].substring(0, 20);
-      const modeAndName = arr[i + 1].substring(20);
-      treeEntries[i].hash = hash;
-
-      if (modeAndName) {
-        const [mode, name] = modeAndName.split(" ");
-        treeEntries.push({ mode, name, hash: "" });
-      }
-    }
-    treeEntries?.sort((entry1, entry2) =>
-      entry1.name.localeCompare(entry2.name)
+    const body = decompressedBuffer.subarray(
+      decompressedBuffer.indexOf("\0") + 1
     );
-    console.log(arr);
+
+    const treeEntries: TreeEntry[] = [];
+    let nullIndex = 0;
+    for (let i = 0; i < body.length; i = nullIndex + 21) {
+      const spaceIndex = body.indexOf(" ", i);
+      nullIndex = body.indexOf("\0", spaceIndex);
+      const mode = body.subarray(i, spaceIndex).toString();
+      const name = body.subarray(spaceIndex + 1, nullIndex).toString();
+      const hash = body.subarray(nullIndex + 1, nullIndex + 21).toString("hex");
+      const type = mode === "40000" ? "tree" : "blob";
+      treeEntries.push({ mode, hash, name });
+    }
     return { objType, objSize, objContent, treeEntries };
   }
 
