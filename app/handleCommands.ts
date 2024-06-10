@@ -49,9 +49,10 @@ function handleLsTree(params: string[]) {
 
   const { treeEntries } = getObjectData(sha1);
   if (flag === "--name-only") {
-    treeEntries?.map((entry) => console.log(entry.name));
+    const res = treeEntries?.map((entry) => entry.name).join("\n");
+
+    process.stdout.write(res + "\n");
   }
-  // process.stdout.write("");
 }
 
 function handleHashObject(params: string[]) {
