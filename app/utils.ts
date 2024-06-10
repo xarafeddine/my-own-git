@@ -83,7 +83,7 @@ export function getObjectData(sha1: string) {
     treeEntries?.sort((entry1, entry2) =>
       entry1.name.localeCompare(entry2.name)
     );
-    console.log(treeEntries);
+    console.log(arr);
     return { objType, objSize, objContent, treeEntries };
   }
 
