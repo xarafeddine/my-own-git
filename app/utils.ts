@@ -42,12 +42,10 @@ export function getObjectData(sha1: string) {
   const decompressedBuffer = zlib.unzipSync(objBuffer);
 
   const objString = decompressedBuffer.toString();
-  console.log('objString: ',objString, "\n");
-  console.log('seconde part: ',
-    decompressedBuffer
-      .subarray(decompressedBuffer.indexOf("\0") + 1)
-      .toString(),
-    "\n"
+  console.log("objString: ", objString);
+  console.log(
+    "seconde part: ",
+    decompressedBuffer.subarray(decompressedBuffer.indexOf("\0") + 1).toString()
   );
   const [header, objContent] = objString.split("\0");
   const [objType, objSize] = header.split(" ");
