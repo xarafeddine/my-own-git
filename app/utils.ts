@@ -42,17 +42,16 @@ export function getObjectData(sha1: string) {
   const decompressedBuffer = zlib.unzipSync(objBuffer);
 
   const objString = decompressedBuffer.toString();
-  const [header, objContent] = objString.split("\0");
-  const [objType, objSize] = header.split(" ");
-
-  console.log(
-    objString,
-    "\n",
+  console.log('objString: ',objString, "\n");
+  console.log('seconde part: ',
     decompressedBuffer
       .subarray(decompressedBuffer.indexOf("\0") + 1)
       .toString(),
     "\n"
   );
+  const [header, objContent] = objString.split("\0");
+  const [objType, objSize] = header.split(" ");
+
   if (objType === "tree") {
     const arr = objContent.split("\0");
     const [mode, name] = arr[0].split(" ");
