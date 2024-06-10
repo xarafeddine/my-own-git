@@ -50,7 +50,7 @@ export function getObjectData(sha1: string) {
     const body = decompressedBuffer.subarray(
       decompressedBuffer.indexOf("\0") + 1
     );
-    console.log(body, objContent);
+    console.log(body.toString(), objContent);
     const treeEntries: TreeEntry[] = [];
     let nullIndex = 0;
     for (let i = 0; i < body.length; i = nullIndex + 21) {
