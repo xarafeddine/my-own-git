@@ -2,6 +2,7 @@ import crypto, { BinaryToTextEncoding } from "crypto";
 import fs from "fs";
 import zlib from "zlib";
 import { FileMode, TreeEntry } from "./types";
+import { buffer } from "stream/consumers";
 
 // const encoder = new TextEncoder();
 // const decoder = new TextDecoder();
@@ -45,12 +46,12 @@ export function getObjectData(sha1: string) {
 
   const [header, objContent] = objString.split("\0");
   const [objType, objSize] = header.split(" ");
-
+  console.log(objType, objSize, Buffer.from(objContent).toString("hex"));
   if (objType === "tree") {
     const body = decompressedBuffer.subarray(
       decompressedBuffer.indexOf("\0") + 1
     );
-    console.log(body.toString(), objContent);
+
     const treeEntries: TreeEntry[] = [];
     let nullIndex = 0;
     for (let i = 0; i < body.length; i = nullIndex + 21) {
