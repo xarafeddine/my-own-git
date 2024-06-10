@@ -45,7 +45,7 @@ export function getObjectData(sha1: string) {
   const [header, objContent] = objString.split("\0");
   const [objType, objSize] = header.split(" ");
 
-  console.log(
+  console.log(objString,
     decompressedBuffer.subarray(decompressedBuffer.indexOf("\0") + 1).toString()
   );
   if (objType === "tree") {
