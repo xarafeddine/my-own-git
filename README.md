@@ -87,6 +87,12 @@ Create a get blob object
 mygit hash-object -w <filename>
 ```
 
+Create a get blob object
+
+```sh
+mygit ls-tree <tree-sha>
+```
+
 ### Future commands (not yet implimented)
 
 Add Files
