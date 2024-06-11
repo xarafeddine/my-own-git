@@ -1,7 +1,11 @@
 import fs from "fs";
-import zlib from "zlib";
 import { Commands, ObjectType, TreeEntry, isSha1 } from "./types";
-import { computeSHA1Hash, getObjectData, getObjectPath } from "./utils";
+import {
+  buildFileSystemTree,
+  getObjectData,
+  writeBlobObject,
+  writeTreeObject,
+} from "./utils";
 
 export function handleCommands(args: string[]) {
   const [command, ...params] = args;
@@ -19,6 +23,10 @@ export function handleCommands(args: string[]) {
 
     case Commands.LS_TREE:
       handleLsTree(params);
+      break;
+
+    case Commands.WRITE_TREE:
+      handleWriteTree();
       break;
 
     default:
@@ -57,6 +65,7 @@ function handleLsTree(params: string[]) {
   const treeEntries = objContent as TreeEntry[];
   if (!treeEntries) throw Error("");
 
+  treeEntries.sort((a, b) => a.name.localeCompare(b.name));
   if (param === "--name-only") {
     for (const entry of treeEntries) {
       console.log(entry.name);
@@ -75,19 +84,25 @@ function handleLsTree(params: string[]) {
 
 function handleHashObject(params: string[]) {
   const [flag, fileName] = params;
-  if (flag !== "-w") throw "error";
-  const fileContent = fs.readFileSync(fileName);
-  const blobFile = Buffer.from(`blob ${fileContent.length}\0${fileContent}`);
+  if (flag !== "-w") throw Error("Invalid flag");
+  try {
+    const hashedBlobFile = writeBlobObject(fileName);
+    process.stdout.write(hashedBlobFile);
+  } catch (err: any) {
+    console.error("Error reading directory:", err.message);
+    console.log("Make sure to initialize the repo first: 'mygit init' ");
+  }
+}
 
-  // Compute hash for blob
-  const hashedBlobFile = computeSHA1Hash(blobFile, "hex");
+function handleWriteTree() {
+  const currentDirectory = process.cwd();
+  try {
+    const currentDir = buildFileSystemTree(currentDirectory);
 
-  const [blobFileDir, blobFileName] = getObjectPath(hashedBlobFile);
-
-  const compressBlob = zlib.deflateSync(blobFile);
-  fs.mkdirSync(`.git/objects/${blobFileDir}`);
-  // Store blob
-  fs.writeFileSync(`.git/objects/${blobFileDir}/${blobFileName}`, compressBlob);
-  // Print the computed hash
-  process.stdout.write(hashedBlobFile);
+    const hashedTree = writeTreeObject(currentDir);
+    process.stdout.write(hashedTree);
+  } catch (err: any) {
+    console.error("Error reading directory:", err);
+    console.log("Make sure to initialize the repo first: 'mygit init' ");
+  }
 }

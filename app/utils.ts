@@ -1,8 +1,9 @@
 import crypto, { BinaryToTextEncoding } from "crypto";
 import fs from "fs";
 import zlib from "zlib";
-import { FileMode, TreeEntry } from "./types";
+import { FileMode, FileSystemNode, TreeEntry } from "./types";
 import { buffer } from "stream/consumers";
+import path from "path";
 
 // const encoder = new TextEncoder();
 // const decoder = new TextDecoder();
@@ -60,7 +61,7 @@ export function getObjectData(sha1: string) {
       const mode = body.subarray(i, spaceIndex).toString();
       const name = body.subarray(spaceIndex + 1, nullIndex).toString();
       const hash = body.subarray(nullIndex + 1, nullIndex + 21).toString("hex");
-      const type = mode === "40000" ? "tree" : "blob";
+
       treeEntries.push({ mode, hash, name });
     }
     return { objType, objSize, objContent: treeEntries };
@@ -69,12 +70,86 @@ export function getObjectData(sha1: string) {
   return { objType, objSize, objContent };
 }
 
-export function computeSHA1Hash(
-  input: string | Buffer,
-  option?: BinaryToTextEncoding
-) {
+export function computeSHA1Hash(input: string | Buffer) {
   const shasum = crypto.createHash("sha1");
   shasum.update(input);
 
-  return shasum.digest(option || "binary");
+  return shasum.digest("hex");
+}
+
+export function writeBlobObject(fileName: string) {
+  const fileContent = fs.readFileSync(fileName);
+  const blobFile = Buffer.from(`blob ${fileContent.length}\0${fileContent}`);
+
+  // Compute hash for blob
+  const hashedBlobFile = computeSHA1Hash(blobFile);
+
+  const [blobFileDir, blobFileName] = getObjectPath(hashedBlobFile);
+
+  const compressBlob = zlib.deflateSync(blobFile);
+  fs.mkdirSync(`.git/objects/${blobFileDir}`, { recursive: true });
+  fs.writeFileSync(`.git/objects/${blobFileDir}/${blobFileName}`, compressBlob);
+
+  return hashedBlobFile;
+}
+
+export function writeTreeObject(node: FileSystemNode, dirPath = "") {
+  let contentBuffer = Buffer.alloc(0);
+
+  node.children?.forEach((child) => {
+    let mode;
+    let name;
+    let sha;
+    if (child.type == "directory") {
+      mode = +FileMode.Directory;
+      name = child.name;
+      sha = writeTreeObject(child, child.name);
+    } else {
+      mode = +FileMode.Regular;
+      name = child.name;
+      sha = writeBlobObject(path.join(dirPath, child.name));
+    }
+    // console.log(name, sha, sha.length);
+    const modeBuffer = Buffer.from(mode + " ");
+    const nameBuffer = Buffer.from(name);
+    const nullBuffer = Buffer.from([0]);
+    const shaBuffer = Buffer.from(sha, "hex");
+    const buff = Buffer.concat([modeBuffer, nameBuffer, nullBuffer, shaBuffer]);
+    contentBuffer = Buffer.concat([contentBuffer, buff]);
+  });
+
+  const treeHeaderString = `tree ${contentBuffer.length}\0`;
+
+  const treeBunffer = Buffer.concat([
+    Buffer.from(treeHeaderString),
+    contentBuffer,
+  ]);
+
+  const hashedTree = computeSHA1Hash(treeBunffer);
+
+  const [treeObjDir, treeObjName] = getObjectPath(hashedTree);
+
+  const compressTree = zlib.deflateSync(treeBunffer);
+  fs.mkdirSync(`.git/objects/${treeObjDir}`, { recursive: true });
+  fs.writeFileSync(`.git/objects/${treeObjDir}/${treeObjName}`, compressTree);
+
+  return hashedTree;
+}
+
+export function buildFileSystemTree(dirPath: string): FileSystemNode {
+  const stats = fs.statSync(dirPath);
+  const node: FileSystemNode = {
+    name: path.basename(dirPath),
+    type: stats.isDirectory() ? "directory" : "file",
+  };
+
+  if (stats.isDirectory()) {
+    const children = fs.readdirSync(dirPath);
+    children.sort((a, b) => a.localeCompare(b));
+    node.children = children
+      .filter((child) => child != ".git")
+      .map((child) => buildFileSystemTree(path.join(dirPath, child)));
+  }
+
+  return node;
 }

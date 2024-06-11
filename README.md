@@ -15,6 +15,10 @@
 
 Welcome to the **My own Git** project! This project aims to build a custom version control system similar to Git from scratch using [Bun](https://bun.sh) and [TypeScript](https://www.typescriptlang.org).
 
+This Git implementation is capable of initializing a repository, creating commits and cloning a public repository.
+
+Building this project, I gained insights into the .git directory, Git objects (such as blobs, commits, and trees), Git's transfer protocols, and more.
+
 ## Features
 
 - **Initialization**: Create a new repository.
