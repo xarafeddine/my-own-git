@@ -94,27 +94,42 @@ export function writeBlobObject(fileName: string) {
 }
 
 export function writeTreeObject(node: FileSystemNode, dirPath = "") {
-  let treeContent = "";
+  let contentBuffer = Buffer.alloc(0);
   let treeSize = 0;
   node.children?.forEach((child) => {
+    let mode;
+    let name;
+    let sha;
     if (child.type == "directory") {
       const { hashedTree, treeSize: size } = writeTreeObject(child, child.name);
       treeSize += size;
-      const mode = FileMode.Directory;
-      const name = child.name;
-      treeContent += `${mode} ${name}\0${hashedTree}`;
+      mode = FileMode.Directory;
+      name = child.name;
+      sha = hashedTree;
     } else {
-      const mode = FileMode.Regular;
-      const name = child.name;
+      mode = FileMode.Regular;
+      name = child.name;
       const { hashedBlobFile, blobSize } = writeBlobObject(
         path.join(dirPath, child.name)
       );
       treeSize += blobSize;
-      treeContent += `${mode} ${name}\0${hashedBlobFile}`;
+      sha = hashedBlobFile;
     }
+
+    const modeBuffer = Buffer.from(mode + " ");
+    const nameBuffer = Buffer.from(name);
+    const nullBuffer = Buffer.from([0]);
+    const shaBuffer = Buffer.from(sha, "hex");
+    const buff = Buffer.concat([modeBuffer, nameBuffer, nullBuffer, shaBuffer]);
+    contentBuffer = Buffer.concat([contentBuffer, buff]);
   });
 
-  const treeBunffer = Buffer.from(`tree ${treeSize}\0${treeContent}`);
+  const treeHeaderString = `tree ${contentBuffer.length}\0`;
+
+  const treeBunffer = Buffer.concat([
+    Buffer.from(treeHeaderString),
+    contentBuffer,
+  ]);
 
   const hashedTree = computeSHA1Hash(treeBunffer);
 
