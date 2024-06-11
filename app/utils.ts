@@ -109,7 +109,7 @@ export function writeTreeObject(node: FileSystemNode, dirPath = "") {
       name = child.name;
       sha = writeBlobObject(path.join(dirPath, child.name));
     }
-    console.log(name, sha, sha.length);
+    // console.log(name, sha, sha.length);
     const modeBuffer = Buffer.from(mode + " ");
     const nameBuffer = Buffer.from(name);
     const nullBuffer = Buffer.from([0]);
