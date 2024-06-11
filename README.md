@@ -79,7 +79,7 @@ Initialize a Repository
 mygit init
 ```
 
-Read a git repo object
+Read a git blob object
 
 ```sh
 mygit cat-file -p <blob_sha>
@@ -101,6 +101,12 @@ Create a git tree object
 
 ```sh
 mygit write-tree <tree-sha>
+```
+
+Create a git commit object
+
+```sh
+mygit commit-tree <tree_sha> -p <commit_sha> -m <message>
 ```
 
 ### Future commands (not yet implimented)

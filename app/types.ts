@@ -4,6 +4,7 @@ export enum Commands {
   HASH_OBJECT = "hash-object",
   LS_TREE = "ls-tree",
   WRITE_TREE = "write-tree",
+  COMMIT_TREE = "commit-tree",
 }
 export enum FileMode {
   Regular = "100644",
