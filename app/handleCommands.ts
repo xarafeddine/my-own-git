@@ -86,7 +86,7 @@ function handleHashObject(params: string[]) {
   const [flag, fileName] = params;
   if (flag !== "-w") throw Error("Invalid flag");
   try {
-    const { hashedBlobFile } = writeBlobObject(fileName);
+    const hashedBlobFile = writeBlobObject(fileName);
     process.stdout.write(hashedBlobFile);
   } catch (err: any) {
     console.error("Error reading directory:", err.message);
@@ -99,7 +99,7 @@ function handleWriteTree() {
   try {
     const currentDir = buildFileSystemTree(currentDirectory);
 
-    const { hashedTree } = writeTreeObject(currentDir);
+    const hashedTree = writeTreeObject(currentDir);
     process.stdout.write(hashedTree);
   } catch (err: any) {
     console.error("Error reading directory:", err);

@@ -90,29 +90,26 @@ export function writeBlobObject(fileName: string) {
   fs.mkdirSync(`.git/objects/${blobFileDir}`);
   fs.writeFileSync(`.git/objects/${blobFileDir}/${blobFileName}`, compressBlob);
 
-  return { hashedBlobFile, blobSize: fileContent.length };
+  return hashedBlobFile;
 }
 
 export function writeTreeObject(node: FileSystemNode, dirPath = "") {
   let contentBuffer = Buffer.alloc(0);
-  let treeSize = 0;
+
   node.children?.forEach((child) => {
     let mode;
     let name;
     let sha;
     if (child.type == "directory") {
-      const { hashedTree, treeSize: size } = writeTreeObject(child, child.name);
-      treeSize += size;
+      const hashedTree = writeTreeObject(child, child.name);
       mode = FileMode.Directory;
       name = child.name;
       sha = hashedTree;
     } else {
       mode = FileMode.Regular;
       name = child.name;
-      const { hashedBlobFile, blobSize } = writeBlobObject(
-        path.join(dirPath, child.name)
-      );
-      treeSize += blobSize;
+      const hashedBlobFile = writeBlobObject(path.join(dirPath, child.name));
+
       sha = hashedBlobFile;
     }
 
@@ -139,7 +136,7 @@ export function writeTreeObject(node: FileSystemNode, dirPath = "") {
   fs.mkdirSync(`.git/objects/${treeObjDir}`);
   fs.writeFileSync(`.git/objects/${treeObjDir}/${treeObjName}`, compressTree);
 
-  return { hashedTree, treeSize };
+  return hashedTree;
 }
 
 export function buildFileSystemTree(dirPath: string): FileSystemNode {
