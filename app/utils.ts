@@ -93,6 +93,72 @@ export function writeBlobObject(fileName: string) {
   return hashedBlobFile;
 }
 
+export function writeCommitObject({
+  tree_sha,
+  commit_sha,
+  message,
+  authorName,
+  authorEmail,
+  commiterEmail,
+  commiterName,
+}: {
+  tree_sha: string;
+  commit_sha: string;
+  message: string;
+  authorName: string;
+  authorEmail: string;
+  commiterName: string;
+  commiterEmail: string;
+}) {
+  const treeBuffer = Buffer.from(`tree ${tree_sha}`);
+  const parentBuffer = Buffer.from(`parent ${commit_sha}`);
+
+  const now = new Date();
+
+  const timestamp = now.getTime();
+  const utcOffsetMinutes = now.getTimezoneOffset();
+  const utcOffset = -utcOffsetMinutes * 60;
+
+  const authorTime = `${timestamp} ${utcOffset >= 0 ? "+" : "-"}${String(
+    Math.floor(Math.abs(utcOffset) / 3600)
+  ).padStart(2, "0")}${String(
+    Math.floor(Math.abs(utcOffset) / 60) % 60
+  ).padStart(2, "0")}`;
+
+  const authorBuffer = Buffer.from(
+    `author ${authorName} <${authorEmail}> ${authorTime}`
+  );
+  const commiterBuffer = Buffer.from(
+    `author ${commiterName} <${commiterEmail}> ${authorTime}`
+  );
+  const newLineBuffer = Buffer.from("\n");
+  const messageBuffer = Buffer.from(message);
+  const buff = Buffer.concat([
+    treeBuffer,
+    parentBuffer,
+    authorBuffer,
+    commiterBuffer,
+    newLineBuffer,
+    messageBuffer,
+  ]);
+
+  const commitHeaderBuffer = Buffer.from(`commit ${buff.length}\0`);
+  const commitBuffer = Buffer.concat([commitHeaderBuffer, buff]);
+
+  const hashedCommitFile = computeSHA1Hash(commitBuffer);
+
+  const [commitFileDir, commitFileName] = getObjectPath(hashedCommitFile);
+
+  const compressedCommit = zlib.deflateSync(commitBuffer);
+  fs.mkdirSync(`.git/objects/${commitFileDir}`, { recursive: true });
+  fs.writeFileSync(
+    `.git/objects/${commitFileDir}/${commitFileName}`,
+    compressedCommit
+  );
+
+  return hashedCommitFile;
+}
+
 export function writeTreeObject(node: FileSystemNode, dirPath = "") {
   let contentBuffer = Buffer.alloc(0);
 

@@ -4,6 +4,7 @@ import {
   buildFileSystemTree,
   getObjectData,
   writeBlobObject,
+  writeCommitObject,
   writeTreeObject,
 } from "./utils";
 
@@ -29,6 +30,10 @@ export function handleCommands(args: string[]) {
       handleWriteTree();
       break;
 
+    case Commands.COMMIT_TREE:
+      handleCommitTree(params);
+      break;
+
     default:
       throw new Error(`Unknown command ${command}`);
   }
@@ -48,6 +53,25 @@ function handleCatFile(params: string[]) {
   const { objContent } = getObjectData(sha1);
 
   process.stdout.write(objContent as string);
+}
+
+function handleCommitTree(params: string[]) {
+  if (params.length < 5) throw Error("Invalid number of arguments");
+  const [tree_sha, _p, commit_sha, _m, message] = params;
+  const authorEmail = "asdf@sdf.com";
+  const authorName = "asdf";
+  const commiterEmail = "asdf@asdf.com";
+  const commiterName = "asfsdf";
+  const commitSha = writeCommitObject({
+    tree_sha,
+    commit_sha,
+    message,
+    authorEmail,
+    authorName,
+    commiterEmail,
+    commiterName,
+  });
+  process.stdout.write(commitSha);
 }
 
 function handleLsTree(params: string[]) {
