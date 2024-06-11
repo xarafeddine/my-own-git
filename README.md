@@ -85,16 +85,22 @@ Read a git repo object
 mygit cat-file -p <blob_sha>
 ```
 
-Create a get blob object
+Create a git blob object
 
 ```sh
 mygit hash-object -w <filename>
 ```
 
-Create a get blob object
+Read a git tree object
 
 ```sh
 mygit ls-tree <tree-sha>
+```
+
+Create a git tree object
+
+```sh
+mygit write-tree <tree-sha>
 ```
 
 ### Future commands (not yet implimented)
