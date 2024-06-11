@@ -3,6 +3,7 @@ export enum Commands {
   CAT_FILE = "cat-file",
   HASH_OBJECT = "hash-object",
   LS_TREE = "ls-tree",
+  WRITE_TREE = "write-tree",
 }
 export enum FileMode {
   Regular = "100644",
@@ -27,4 +28,10 @@ export type TreeEntry = {
   mode: string;
   name: string;
   hash: string;
+};
+
+export type FileSystemNode = {
+  name: string;
+  type: "file" | "directory";
+  children?: FileSystemNode[];
 };
