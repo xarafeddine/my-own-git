@@ -110,12 +110,12 @@ export function writeCommitObject({
   commiterName: string;
   commiterEmail: string;
 }) {
-  const treeBuffer = Buffer.from(`tree ${tree_sha}`);
-  const parentBuffer = Buffer.from(`parent ${commit_sha}`);
+  const treeBuffer = Buffer.from(`tree ${tree_sha}\n`);
+  const parentBuffer = Buffer.from(`parent ${commit_sha}\n`);
 
   const now = new Date();
 
-  const timestamp = now.getTime();
+  const timestamp = Math.floor(now.getTime() / 1000);
   const utcOffsetMinutes = now.getTimezoneOffset();
   const utcOffset = -utcOffsetMinutes * 60;
 
@@ -126,13 +126,13 @@ export function writeCommitObject({
   ).padStart(2, "0")}`;
 
   const authorBuffer = Buffer.from(
-    `author ${authorName} <${authorEmail}> ${authorTime}`
+    `author ${authorName} <${authorEmail}> ${authorTime}\n`
   );
   const commiterBuffer = Buffer.from(
-    `author ${commiterName} <${commiterEmail}> ${authorTime}`
+    `author ${commiterName} <${commiterEmail}> ${authorTime}\n`
   );
   const newLineBuffer = Buffer.from("\n");
-  const messageBuffer = Buffer.from(message);
+  const messageBuffer = Buffer.from(message + "\n");
   const buff = Buffer.concat([
     treeBuffer,
     parentBuffer,
