@@ -87,7 +87,7 @@ export function writeBlobObject(fileName: string) {
   const [blobFileDir, blobFileName] = getObjectPath(hashedBlobFile);
 
   const compressBlob = zlib.deflateSync(blobFile);
-  fs.mkdirSync(`.git/objects/${blobFileDir}`);
+  fs.mkdirSync(`.git/objects/${blobFileDir}`, { recursive: true });
   fs.writeFileSync(`.git/objects/${blobFileDir}/${blobFileName}`, compressBlob);
 
   return hashedBlobFile;
@@ -101,18 +101,15 @@ export function writeTreeObject(node: FileSystemNode, dirPath = "") {
     let name;
     let sha;
     if (child.type == "directory") {
-      const hashedTree = writeTreeObject(child, child.name);
-      mode = FileMode.Directory;
+      mode = +FileMode.Directory;
       name = child.name;
-      sha = hashedTree;
+      sha = writeTreeObject(child, child.name);
     } else {
-      mode = FileMode.Regular;
+      mode = +FileMode.Regular;
       name = child.name;
-      const hashedBlobFile = writeBlobObject(path.join(dirPath, child.name));
-
-      sha = hashedBlobFile;
+      sha = writeBlobObject(path.join(dirPath, child.name));
     }
-
+    console.log(name, sha, sha.length);
     const modeBuffer = Buffer.from(mode + " ");
     const nameBuffer = Buffer.from(name);
     const nullBuffer = Buffer.from([0]);
@@ -133,7 +130,7 @@ export function writeTreeObject(node: FileSystemNode, dirPath = "") {
   const [treeObjDir, treeObjName] = getObjectPath(hashedTree);
 
   const compressTree = zlib.deflateSync(treeBunffer);
-  fs.mkdirSync(`.git/objects/${treeObjDir}`);
+  fs.mkdirSync(`.git/objects/${treeObjDir}`, { recursive: true });
   fs.writeFileSync(`.git/objects/${treeObjDir}/${treeObjName}`, compressTree);
 
   return hashedTree;
