@@ -70,25 +70,19 @@ export function getObjectData(sha1: string) {
   return { objType, objSize, objContent };
 }
 
-export function computeSHA1Hash(
-  input: string | Buffer,
-  option?: BinaryToTextEncoding
-) {
+export function computeSHA1Hash(input: string | Buffer) {
   const shasum = crypto.createHash("sha1");
   shasum.update(input);
 
-  return shasum.digest(option || "binary");
+  return shasum.digest("hex");
 }
 
-export function writeBlobObject(
-  fileName: string,
-  option: BinaryToTextEncoding = "hex"
-) {
+export function writeBlobObject(fileName: string) {
   const fileContent = fs.readFileSync(fileName);
   const blobFile = Buffer.from(`blob ${fileContent.length}\0${fileContent}`);
 
   // Compute hash for blob
-  const hashedBlobFile = computeSHA1Hash(blobFile, option);
+  const hashedBlobFile = computeSHA1Hash(blobFile);
 
   const [blobFileDir, blobFileName] = getObjectPath(hashedBlobFile);
 
@@ -113,8 +107,7 @@ export function writeTreeObject(node: FileSystemNode, dirPath = "") {
       const mode = FileMode.Regular;
       const name = child.name;
       const { hashedBlobFile, blobSize } = writeBlobObject(
-        path.join(dirPath, child.name),
-        "hex"
+        path.join(dirPath, child.name)
       );
       treeSize += blobSize;
       treeContent += `${mode} ${name}\0${hashedBlobFile}`;
@@ -123,7 +116,7 @@ export function writeTreeObject(node: FileSystemNode, dirPath = "") {
 
   const treeBunffer = Buffer.from(`tree ${treeSize}\0${treeContent}`);
 
-  const hashedTree = computeSHA1Hash(treeBunffer, "hex");
+  const hashedTree = computeSHA1Hash(treeBunffer);
 
   const [treeObjDir, treeObjName] = getObjectPath(hashedTree);
 
@@ -143,6 +136,7 @@ export function buildFileSystemTree(dirPath: string): FileSystemNode {
 
   if (stats.isDirectory()) {
     const children = fs.readdirSync(dirPath);
+    children.sort((a, b) => a.localeCompare(b));
     node.children = children
       .filter((child) => child != ".git")
       .map((child) => buildFileSystemTree(path.join(dirPath, child)));

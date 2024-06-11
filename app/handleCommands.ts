@@ -65,6 +65,7 @@ function handleLsTree(params: string[]) {
   const treeEntries = objContent as TreeEntry[];
   if (!treeEntries) throw Error("");
 
+  treeEntries.sort((a, b) => a.name.localeCompare(b.name));
   if (param === "--name-only") {
     for (const entry of treeEntries) {
       console.log(entry.name);
@@ -97,7 +98,7 @@ function handleWriteTree() {
   const currentDirectory = process.cwd();
   try {
     const currentDir = buildFileSystemTree(currentDirectory);
-    
+
     const { hashedTree } = writeTreeObject(currentDir);
     process.stdout.write(hashedTree);
   } catch (err: any) {
