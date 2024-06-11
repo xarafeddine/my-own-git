@@ -2,7 +2,6 @@ import crypto, { BinaryToTextEncoding } from "crypto";
 import fs from "fs";
 import zlib from "zlib";
 import { FileMode, FileSystemNode, TreeEntry } from "./types";
-import { buffer } from "stream/consumers";
 import path from "path";
 
 // const encoder = new TextEncoder();
@@ -32,11 +31,20 @@ export function bytesToString(arr: Uint8Array): string {
     .join("");
 }
 
+export function writeGitObject(sha1: string, objectBuffer: Buffer) {
+  const [objectDir, objectFile] = getObjectPath(sha1);
+  const compressedCommit = zlib.deflateSync(objectBuffer);
+  fs.mkdirSync(`.git/objects/${objectDir}`, { recursive: true });
+  fs.writeFileSync(`.git/objects/${objectDir}/${objectFile}`, compressedCommit);
+  return true;
+}
+
 export function getObjectPath(sha1: string) {
   const objectDir = sha1.substring(0, 2);
   const objectFile = sha1.substring(2);
   return [objectDir, objectFile];
 }
+
 export function getObjectData(sha1: string) {
   const [objDir, objFile] = getObjectPath(sha1);
 
@@ -71,24 +79,15 @@ export function getObjectData(sha1: string) {
 }
 
 export function computeSHA1Hash(input: string | Buffer) {
-  const shasum = crypto.createHash("sha1");
-  shasum.update(input);
-
-  return shasum.digest("hex");
+  return crypto.createHash("sha1").update(input).digest("hex").toString();
 }
 
 export function writeBlobObject(fileName: string) {
   const fileContent = fs.readFileSync(fileName);
   const blobFile = Buffer.from(`blob ${fileContent.length}\0${fileContent}`);
 
-  // Compute hash for blob
   const hashedBlobFile = computeSHA1Hash(blobFile);
-
-  const [blobFileDir, blobFileName] = getObjectPath(hashedBlobFile);
-
-  const compressBlob = zlib.deflateSync(blobFile);
-  fs.mkdirSync(`.git/objects/${blobFileDir}`, { recursive: true });
-  fs.writeFileSync(`.git/objects/${blobFileDir}/${blobFileName}`, compressBlob);
+  writeGitObject(hashedBlobFile, blobFile);
 
   return hashedBlobFile;
 }
@@ -147,14 +146,7 @@ export function writeCommitObject({
 
   const hashedCommitFile = computeSHA1Hash(commitBuffer);
 
-  const [commitFileDir, commitFileName] = getObjectPath(hashedCommitFile);
-
-  const compressedCommit = zlib.deflateSync(commitBuffer);
-  fs.mkdirSync(`.git/objects/${commitFileDir}`, { recursive: true });
-  fs.writeFileSync(
-    `.git/objects/${commitFileDir}/${commitFileName}`,
-    compressedCommit
-  );
+  writeGitObject(hashedCommitFile, commitBuffer);
 
   return hashedCommitFile;
 }
@@ -193,11 +185,7 @@ export function writeTreeObject(node: FileSystemNode, dirPath = "") {
 
   const hashedTree = computeSHA1Hash(treeBunffer);
 
-  const [treeObjDir, treeObjName] = getObjectPath(hashedTree);
-
-  const compressTree = zlib.deflateSync(treeBunffer);
-  fs.mkdirSync(`.git/objects/${treeObjDir}`, { recursive: true });
-  fs.writeFileSync(`.git/objects/${treeObjDir}/${treeObjName}`, compressTree);
+  writeGitObject(hashedTree, treeBunffer);
 
   return hashedTree;
 }
